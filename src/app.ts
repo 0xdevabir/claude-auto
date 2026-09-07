@@ -9,13 +9,14 @@ import {
   formatErrorBanner,
 } from "./errors/errors.js";
 import { detectLimit } from "./limit/detector.js";
-import { isRetryableLimit } from "./limit/types.js";
+import { isRetryableLimit, type LimitDetectionResult } from "./limit/types.js";
 import { globalSignals, type SignalHub } from "./process/signals.js";
 import type { ClaudeProcessHandle } from "./process/manager.js";
 import { RetryManager } from "./retry/manager.js";
 import { acquireLock, type LockHandle } from "./session/lock.js";
 import { StateManager, StateCorruptError } from "./session/manager.js";
 import { emptyState, type PersistedState } from "./session/state.js";
+import { waitForTranscriptLimit } from "./session/transcript-watch.js";
 import { waitWithCountdown } from "./ui/countdown.js";
 import { Logger } from "./ui/logger.js";
 import { isValidSessionId } from "./claude/session.js";
@@ -185,14 +186,36 @@ async function sessionLoop(args: {
 }): Promise<number> {
   let handle = args.handle;
   let state = args.state;
+  // First watch accepts limits since session start; after each resume, only newer events.
+  let watchSince = state.startedAt ? new Date(state.startedAt) : new Date();
 
   for (;;) {
     args.signals.throwIfCancelled();
-    const code = await handle.wait();
-    const output = handle.output;
-    args.logger.verbose(`Claude process exited (${code})`);
 
-    const detection = detectLimit(output);
+    const runResult = await waitForRunResult({
+      handle,
+      mode: args.mode,
+      sessionId: state.sessionId,
+      cwd: args.cwd,
+      since: watchSince,
+      signals: args.signals,
+      logger: args.logger,
+    });
+
+    const code = runResult.code;
+    const output = runResult.output;
+    let detection = runResult.detection;
+
+    args.logger.verbose(
+      detection?.detected
+        ? `Limit detected while Claude was still running (${detection.type})`
+        : `Claude process exited (${code})`,
+    );
+
+    if (!detection) {
+      detection = detectLimit(output);
+    }
+
     if (detection.detected && isRetryableLimit(detection.type)) {
       if (!args.config.autoResume) {
         args.logger.warn("Limit detected but autoResume is disabled.");
@@ -214,6 +237,9 @@ async function sessionLoop(args: {
       args.logger.verbose(`Limit detected (${detection.type})`);
       args.logger.verbose(`Session: ${state.sessionId}`);
       args.logger.verbose(`Reset: ${plan.retryAt.toISOString()}`);
+      args.logger.info(
+        "\nClaude Auto: usage/rate limit detected — waiting for reset, then resuming the same session.\n",
+      );
 
       await waitWithCountdown({
         resetAt: plan.retryAt,
@@ -235,9 +261,10 @@ async function sessionLoop(args: {
       await args.stateManager.write(state);
       args.logger.verbose("Reset window reached");
       args.logger.verbose("Resuming session");
+      args.logger.info("\nClaude Auto: reset reached — resuming the same session.\n");
 
-      const continuation =
-        args.mode === "print" ? args.config.continuationPrompt : undefined;
+      // Interactive: resume TUI; also send continuation so work continues without user retyping
+      const continuation = args.config.continuationPrompt;
 
       try {
         const resumeOpts: Parameters<typeof args.adapter.resume>[1] = {
@@ -245,7 +272,12 @@ async function sessionLoop(args: {
           cwd: args.cwd,
           inheritStdio: args.mode === "interactive",
         };
-        if (continuation !== undefined) resumeOpts.prompt = continuation;
+        if (args.mode === "print") {
+          resumeOpts.prompt = continuation;
+        } else {
+          // Interactive resume with an initial continuation prompt (positional)
+          resumeOpts.prompt = continuation;
+        }
         if (args.extraArgs !== undefined) resumeOpts.extraArgs = args.extraArgs;
         handle = await args.adapter.resume(sessionId, resumeOpts);
         args.setActive(handle);
@@ -256,9 +288,10 @@ async function sessionLoop(args: {
         );
       }
 
-      if (continuation) args.logger.verbose("Continuation sent");
+      args.logger.verbose("Continuation sent");
       state = { ...state, status: "running" };
       await args.stateManager.write(state);
+      watchSince = new Date();
       continue;
     }
 
@@ -274,6 +307,74 @@ async function sessionLoop(args: {
     };
     await args.stateManager.write(state);
     return code;
+  }
+}
+
+async function waitForRunResult(args: {
+  handle: ClaudeProcessHandle;
+  mode: AppMode;
+  sessionId: string | null;
+  cwd: string;
+  since: Date;
+  signals: SignalHub;
+  logger: Logger;
+}): Promise<{
+  code: number;
+  output: string;
+  detection: LimitDetectionResult | null;
+}> {
+  // Print mode: output is piped — detect on exit (existing path).
+  if (args.mode !== "interactive" || !args.sessionId) {
+    const code = await args.handle.wait();
+    return { code, output: args.handle.output, detection: null };
+  }
+
+  // Interactive: Claude stays open on limit screens. Watch the session transcript.
+  const abort = new AbortController();
+  const unsub = args.signals.onCancel(() => abort.abort());
+
+  try {
+    const exitPromise = args.handle.wait().then((code) => ({
+      kind: "exit" as const,
+      code,
+    }));
+
+    const limitPromise = waitForTranscriptLimit({
+      sessionId: args.sessionId,
+      cwd: args.cwd,
+      since: args.since,
+      signal: abort.signal,
+      pollMs: 1000,
+    }).then((detection) => ({
+      kind: "limit" as const,
+      detection,
+    }));
+
+    const winner = await Promise.race([exitPromise, limitPromise]);
+
+    if (winner.kind === "limit") {
+      args.logger.verbose(
+        "Transcript reported a usage/rate limit — stopping Claude to wait",
+      );
+      abort.abort();
+      await args.handle.kill();
+      try {
+        await args.handle.wait();
+      } catch {
+        // ignore
+      }
+      return {
+        code: 1,
+        output: winner.detection.rawOutput ?? "",
+        detection: winner.detection,
+      };
+    }
+
+    abort.abort();
+    return { code: winner.code, output: args.handle.output, detection: null };
+  } finally {
+    unsub();
+    abort.abort();
   }
 }
 
@@ -397,3 +498,4 @@ async function recoverAndLoop(args: {
   if (args.extraArgs !== undefined) loopArgs.extraArgs = args.extraArgs;
   return sessionLoop(loopArgs);
 }
+

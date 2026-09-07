@@ -1,47 +1,99 @@
+<div align="center">
+
 # Claude Auto
 
-**Keep Claude Code working through usage limits — same session, automatically.**
+### Keep Claude Code running through usage limits — same session, automatically.
 
-When Claude Code hits a usage or rate limit, Claude Auto waits for the reset, then resumes the **exact same session** and continues your task. No new chat. No lost context.
+[![npm](https://img.shields.io/npm/v/claude-auto.svg?style=for-the-badge&color=111827&labelColor=0f172a)](https://www.npmjs.com/package/claude-auto)
+[![node](https://img.shields.io/node/v/claude-auto.svg?style=for-the-badge&color=059669&labelColor=0f172a)](https://nodejs.org/)
+[![license](https://img.shields.io/npm/l/claude-auto.svg?style=for-the-badge&color=6366f1&labelColor=0f172a)](./LICENSE)
+[![platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Linux%20%7C%20Windows-0ea5e9?style=for-the-badge&labelColor=0f172a)](#platforms)
 
 ```text
-you run a long task
-        │
-        ▼
-   Claude works
-        │
-        ▼
-  usage limit hit
-        │
-        ▼
- Claude Auto waits
-        │
-        ▼
- resume SAME session
-        │
-        ▼
-   task continues
+ ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+ │  long task   │ ──▶ │ usage limit  │ ──▶ │  auto wait   │
+ └──────────────┘     └──────────────┘     └──────────────┘
+                                                    │
+                                                    ▼
+ ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+ │ task resumes │ ◀── │ same session │ ◀── │   reset OK   │
+ └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-> Independent community tool. **Not** affiliated with Anthropic.
+**Local · No telemetry · No new session after a limit**
+
+[Install](#-install) · [Quick start](#-quick-start) · [Commands](#-commands) · [Config](#-configuration) · [FAQ](#-faq)
+
+</div>
+
+---
+
+## Why Claude Auto?
+
+| Without Claude Auto | With Claude Auto |
+| :---: | :---: |
+| Hit a limit → stop | Hit a limit → **wait** |
+| Come back later | Resume **automatically** |
+| Risk losing the thread | **Same session** every time |
+| Manual “continue” | Continuation prompt (prompt mode) |
+
+```mermaid
+flowchart LR
+  A[You start a task] --> B[Claude Code works]
+  B --> C{Usage / rate limit?}
+  C -->|No| D[Task finishes]
+  C -->|Yes| E[Claude Auto detects it]
+  E --> F[Wait until reset + buffer]
+  F --> G[Resume same session ID]
+  G --> B
+```
+
+> Independent community wrapper around the Claude Code CLI.  
+> **Not** affiliated with, sponsored by, or endorsed by Anthropic.
 
 ---
 
 ## Install
 
-**Need:** [Node.js 20+](https://nodejs.org/) and [Claude Code](https://code.claude.com/) on your `PATH` (`claude --version` should work).
+**Prerequisites**
+
+| Tool | Check |
+| --- | --- |
+| **Node.js 20+** | `node --version` |
+| **Claude Code** on `PATH` | `claude --version` |
 
 ```bash
 npm install -g claude-auto
 ```
 
-Check everything is ready:
+Verify your setup:
 
 ```bash
 claude-auto --doctor
 ```
 
-Or try without installing:
+<details>
+<summary><strong>Expected doctor output</strong></summary>
+
+```text
+Claude Auto Doctor
+──────────────────────────────
+claude-auto 1.0.0
+
+Operating system       ✓  …
+Architecture           ✓  …
+Node.js                ✓  v20+
+npm                    ✓  …
+Claude Code installed  ✓  …
+Claude Code version    ✓  …
+Session support        ✓  --session-id …
+Resume support         ✓  --resume …
+…
+```
+
+</details>
+
+One-shot without a global install:
 
 ```bash
 npx claude-auto --doctor
@@ -51,31 +103,44 @@ npx claude-auto --doctor
 
 ## Quick start
 
-### Everyday interactive use
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Interactive
+
+Open Claude like usual:
 
 ```bash
 claude-auto
 ```
 
-Works like opening `claude` — chat normally. Claude Auto stays out of the way until a limit stops the process.
+Chat normally. Claude Auto stays quiet until a limit stops the run.
 
-### Long unattended tasks (recommended)
+</td>
+<td width="50%" valign="top">
 
-```bash
-claude-auto --prompt "Build the authentication system end to end"
-```
-
-Best mode for overnight / AFK work. Claude Auto watches output, waits out limits, resumes the **same** session, and sends a continuation prompt.
-
-Short form:
+### Prompt mode *(best for long jobs)*
 
 ```bash
-claude-auto "Refactor the billing module and add tests"
+claude-auto --prompt "Build auth end to end"
 ```
+
+Or:
+
+```bash
+claude-auto "Refactor billing + tests"
+```
+
+Watches output → waits → resumes **same** session → continues.
+
+</td>
+</tr>
+</table>
 
 ---
 
-## What you’ll see when a limit hits
+## When a limit hits
 
 ```text
 ────────────────────────────────────────
@@ -98,29 +163,27 @@ Resumes:
 Press Ctrl+C to stop.
 ```
 
-When the window opens, it resumes automatically (up to 20 times by default).
-
-Hide the countdown:
-
-```bash
-claude-auto --prompt "…" --no-countdown
-```
+| Control | Effect |
+| --- | --- |
+| Wait it out | Auto-resumes when the window opens |
+| `Ctrl+C` | Cancel cleanly (does **not** start a new session) |
+| `--no-countdown` | Quiet wait, no live timer |
 
 ---
 
-## Common commands
+## Commands
 
-| Goal | Command |
-| --- | --- |
-| Open Claude like usual | `claude-auto` |
-| Run a task until done | `claude-auto --prompt "…"` |
-| Recover after a crash / closed terminal | `claude-auto --resume` |
-| Skip the recover confirmation | `claude-auto --resume --yes` |
-| Check your setup | `claude-auto --doctor` |
-| Practice the wait/resume flow (no Claude API) | `claude-auto --mock` |
-| See all options | `claude-auto --help` |
+| | Command | What it does |
+| :---: | --- | --- |
+| ▶ | `claude-auto` | Interactive Claude Code |
+| 🚀 | `claude-auto --prompt "…"` | Unattended task + auto-resume |
+| ↺ | `claude-auto --resume` | Recover after crash / closed terminal |
+| ✓ | `claude-auto --resume --yes` | Recover without confirmation prompt |
+| ⌕ | `claude-auto --doctor` | Check Node, PATH, Claude, resume support |
+| ▧ | `claude-auto --mock` | Demo the full loop (no real Claude API) |
+| ? | `claude-auto --help` | Full option list |
 
-Pass extra Claude Code flags after `--`:
+Pass Claude Code flags through after `--`:
 
 ```bash
 claude-auto --prompt "Fix flaky tests" -- --model sonnet
@@ -128,9 +191,32 @@ claude-auto --prompt "Fix flaky tests" -- --model sonnet
 
 ---
 
-## Configure (optional)
+## How it works
 
-Create a config file:
+```text
+ 1  create session UUID
+ 2  start:  claude --session-id <uuid> …
+ 3  on limit (stdout OR session transcript) → save state → wait
+ 4  resume: claude --resume <uuid> … (+ continuation prompt)
+ 5  never invent a replacement session
+```
+
+Interactive Claude stays open on a limit screen — so Claude Auto also watches
+`~/.claude/projects/.../<session-id>.jsonl` for `rate_limit` / `resetsAt`, then
+stops Claude, waits, and resumes the same session.
+
+| Mode | Detection | Resume |
+| --- | --- | --- |
+| **Prompt / print** | Reads Claude stdout/stderr | Strong for AFK / overnight jobs |
+| **Interactive** | Watches session transcript while the TUI stays open | Detect → wait → resume same session automatically |
+
+Claude Code **≥ 2.1.234** also has a native “Continue automatically at usage limit” setting. Claude Auto still helps with print-mode loops, recovery, and when that setting is off.
+
+---
+
+## Configuration
+
+**Config file (optional)**
 
 | OS | Path |
 | --- | --- |
@@ -149,59 +235,82 @@ Create a config file:
 }
 ```
 
-Or set the same things from the CLI:
+**Same knobs from the CLI**
 
 ```bash
 claude-auto --prompt "…" \
   --max-resumes 10 \
   --fallback-reset 1800 \
   --reset-buffer 5 \
-  --continuation-prompt "Continue the task from the current state." \
+  --continuation-prompt "Continue from the current state." \
   --verbose
 ```
 
-CLI flags always win over the config file.
+| Key | Default | Meaning |
+| --- | ---: | --- |
+| `fallbackResetSeconds` | `1800` | Wait if Claude didn’t publish a reset time |
+| `resetBufferSeconds` | `5` | Extra seconds after reset before retry |
+| `maxAutoResumes` | `20` | Safety cap against infinite loops |
+| `continuationPrompt` | *(built-in)* | Only sent when resuming print mode |
 
-| Setting | Meaning |
-| --- | --- |
-| `fallbackResetSeconds` | Wait this long if Claude didn’t say when the limit resets (default 30 minutes) |
-| `resetBufferSeconds` | Extra seconds after the reset time before retrying (default 5) |
-| `maxAutoResumes` | Stop after this many automatic resumes (default 20) |
-| `continuationPrompt` | Sent only when resuming print/prompt mode after a limit |
-
----
-
-## Tips for best results
-
-1. **Prefer `--prompt` for long jobs** — limit detection is most reliable in print mode.
-2. **Same session always** — Claude Auto uses `--session-id` / `--resume`. It will not quietly start a new unrelated session and pretend it continued.
-3. **Interrupted wait?** Run `claude-auto --resume` — it picks up the saved session and reset time.
-4. **Claude Code’s own auto-continue** (v2.1.234+) can also wait inside an interactive session; Claude Auto is especially useful for prompt-mode automation, recovery, and when that setting is off.
+CLI flags always override the file.
 
 ---
 
 ## Platforms
 
-Works on **macOS**, **Linux**, and **Windows**.
+```text
+  ┌─────────┐   ┌─────────┐   ┌─────────┐
+  │  macOS  │   │  Linux  │   │ Windows │
+  │    ✓    │   │    ✓    │   │    ✓    │
+  └─────────┘   └─────────┘   └─────────┘
+```
 
 ---
 
 ## Privacy
 
-Local only. No account, no telemetry, no uploads. Claude Auto only talks to the Claude Code CLI already on your machine.
+```text
+  your machine
+  ┌─────────────────────────────┐
+  │  claude-auto  ──▶  claude   │
+  │                             │
+  │  no server · no account     │
+  │  no telemetry · no uploads  │
+  └─────────────────────────────┘
+```
+
+State on disk is minimal (session id, status, resume count) — never API keys or chat contents.
 
 ---
 
-## Troubleshooting
+## FAQ
 
-| Problem | What to try |
-| --- | --- |
-| `Claude Code was not found` | Install Claude Code and ensure `claude` is on your `PATH`, then run `claude-auto --doctor` |
-| Session won’t resume | The old session may be gone — Claude Auto will say so instead of inventing a new one |
-| Reset time unknown | It uses your `fallbackResetSeconds` and tells you it’s a fallback |
-| Another instance lock | Close the other `claude-auto` process, or wait for it to finish |
+<details>
+<summary><strong>Claude Code was not found</strong></summary>
 
-More detail: [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)
+Install Claude Code, confirm `claude --version`, then run `claude-auto --doctor`.
+</details>
+
+<details>
+<summary><strong>Session could not be resumed</strong></summary>
+
+Claude Auto reports this clearly and **does not** invent a new session. Start a fresh run only if you intend to.
+</details>
+
+<details>
+<summary><strong>No reset time in the message</strong></summary>
+
+It waits `fallbackResetSeconds` (default 30 minutes) and labels that wait as a fallback — not a guessed server time.
+</details>
+
+<details>
+<summary><strong>“Another Claude Auto instance…”</strong></summary>
+
+Another process holds the lock. Close it, or wait for it to finish.
+</details>
+
+More: [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -216,46 +325,40 @@ Usage:
   claude-auto --mock
 
 Options:
-  --prompt <text>                 Print mode with an initial prompt
-  --resume                        Recover a previous wait / session
-  --max-resumes <number>          Max automatic resumes (default: 20)
-  --fallback-reset <seconds>      Fallback wait if reset time is unknown
-  --reset-buffer <seconds>        Extra seconds after reset
-  --continuation-prompt <text>    Prompt used only on resume (print mode)
-  --no-countdown                  Quiet waiting (no live countdown)
-  --verbose                       Operational logs
-  --config <path>                 Custom config JSON
-  --yes                           Confirm recovery without asking
-  --doctor                        Environment check
-  --mock                          Local demo lifecycle
+  --prompt <text>
+  --resume
+  --max-resumes <number>
+  --fallback-reset <seconds>
+  --reset-buffer <seconds>
+  --continuation-prompt <text>
+  --no-countdown
+  --verbose
+  --config <path>
+  --yes
+  --doctor
+  --mock
   --version
   --help
 ```
 
 ---
 
-## For contributors
+## Contributing
 
 ```bash
-git clone <this-repo>
-cd claude-auto
 npm install
 npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-- [Contributing](./CONTRIBUTING.md)
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Technical design](./docs/TECHNICAL-DESIGN.md)
-- [Security](./SECURITY.md)
+[Contributing guide](./CONTRIBUTING.md) · [Architecture](./docs/ARCHITECTURE.md) · [Technical design](./docs/TECHNICAL-DESIGN.md) · [Security](./SECURITY.md)
 
 ---
 
-## License
+<div align="center">
 
-MIT — see [LICENSE](./LICENSE).
+**MIT** © Claude Auto contributors · [LICENSE](./LICENSE)
 
-## Disclaimer
+Claude Auto depends on your installed Claude Code CLI.  
+Claude Code changes may require updates here.
 
-Claude Auto is an independent community-developed wrapper around the Claude Code CLI. It is not affiliated with, sponsored by, or endorsed by Anthropic.
-
-Behavior depends on your installed Claude Code version. Claude Code updates may require updates to Claude Auto.
+</div>

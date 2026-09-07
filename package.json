@@ -1,6 +1,6 @@
 {
   "name": "claude-auto",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cross-platform wrapper around the Claude Code CLI that waits out usage/rate limits and resumes the same session.",
   "type": "module",
   "main": "dist/cli.js",
@@ -61,4 +61,3 @@
     "vitest": "^3.2.4"
   }
 }
-

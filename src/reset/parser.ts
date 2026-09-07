@@ -36,7 +36,7 @@ export function parseDurationToSeconds(input: string): ParsedDuration | null {
 }
 
 const CLOCK_RE =
-  /^(?:(mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+)?(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?$/i;
+  /^(?:(mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+)?(\d{1,2})(?::(\d{2})(?::(\d{2}))?)?\s*(am|pm)?$/i;
 
 export function parseClockTime(input: string, now: Date = new Date()): Date | null {
   const text = input.trim();
@@ -51,7 +51,7 @@ export function parseClockTime(input: string, now: Date = new Date()): Date | nu
 
   const dayName = match[1];
   let hour = Number(match[2]);
-  const minute = Number(match[3]);
+  const minute = Number(match[3] ?? 0);
   const second = Number(match[4] ?? 0);
   const ampm = match[5]?.toLowerCase();
 
@@ -66,6 +66,12 @@ export function parseClockTime(input: string, now: Date = new Date()): Date | nu
   ) {
     return null;
   }
+
+  // Bare hour without am/pm is ambiguous
+  if (!ampm && match[3] === undefined) {
+    return null;
+  }
+  if (!ampm && hour > 23) return null;
 
   if (ampm === "pm" && hour < 12) hour += 12;
   if (ampm === "am" && hour === 12) hour = 0;
@@ -141,7 +147,11 @@ export function parseResetInfo(text: string, now: Date = new Date()): ResetParse
 
   const resets = /resets?\s+(?:at\s+)?([^\n·|,]+)/i.exec(text);
   if (resets?.[1]) {
-    const chunk = resets[1].trim();
+    // Strip timezone / parenthetical suffixes: "4:40pm (Asia/Dhaka)"
+    const chunk = resets[1]
+      .replace(/\([^)]*\)/g, "")
+      .replace(/\b(?:UTC|GMT)[+-]?\d*\b/gi, "")
+      .trim();
     const duration = parseDurationToSeconds(chunk.replace(/^in\s+/i, ""));
     if (duration) {
       return {
@@ -180,3 +190,4 @@ export function parseResetInfo(text: string, now: Date = new Date()): ResetParse
 
   return { source: "none" };
 }
+
