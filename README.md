@@ -101,6 +101,34 @@ npx claude-auto --doctor
 
 ---
 
+
+---
+
+## VS Code / Cursor (Claude Code)
+
+Claude Auto can arm Claude Code’s built-in continue-after-limit (works in the IDE):
+
+```bash
+claude-auto ide install
+```
+
+Then reload the Claude Code window and type:
+
+```text
+/claude-auto
+```
+
+| Command | Effect |
+| --- | --- |
+| `claude-auto ide install` | Install `/claude-auto` + turn **on** `autoContinueAtUsageLimit` |
+| `claude-auto ide status` | Show whether auto-continue is on |
+| `claude-auto ide disable` | Turn it off |
+| `/claude-auto` | Slash command inside Claude Code |
+| `/claude-auto:off` | Disable (when plugin loaded) |
+
+This uses Claude Code’s official setting so the **same session** waits and continues inside VS Code/Cursor. The terminal wrapper (`claude-auto` / `--prompt`) is still best for long unattended CLI jobs.
+
+
 ## Quick start
 
 <table>

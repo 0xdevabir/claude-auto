@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Add `claude-auto ide install|enable|disable|status` for VS Code / Cursor / Claude Code
+- Install `/claude-auto` user slash command and enable `autoContinueAtUsageLimit`
+- Ship Claude Code plugin under `claude-plugin/`
+
+
 ## 1.0.1
 
 Initial public release.

@@ -20,6 +20,7 @@ Usage:
   ${CLI_NAME} --resume
   ${CLI_NAME} --doctor
   ${CLI_NAME} --mock
+  ${CLI_NAME} ide install|enable|disable|status
 
 Options:
   --prompt <text>                 Run Claude Code in print mode with a prompt
@@ -37,11 +38,95 @@ Options:
   --version                       Print version
   --help                          Show help
 
+IDE / Claude Code (VS Code & Cursor):
+  ${CLI_NAME} ide install         Install /claude-auto slash command + enable auto-continue
+  ${CLI_NAME} ide enable          Turn on autoContinueAtUsageLimit
+  ${CLI_NAME} ide disable         Turn it off
+  ${CLI_NAME} ide status          Show current setting
+
+Then in Claude Code type:  /claude-auto
+
 Any arguments after \`--\` are forwarded to Claude Code unchanged.
 
 Disclaimer:
   Independent community wrapper. Not affiliated with Anthropic.
 `);
+}
+
+async function runIdeCommand(args: string[]): Promise<number> {
+  const {
+    disableIdeAutoContinue,
+    enableIdeAutoContinue,
+    getIdeAutoContinueStatus,
+    getPluginRoot,
+    installUserSlashCommand,
+    uninstallUserSlashCommand,
+  } = await import("./ide/settings.js");
+
+  const sub = args[0] ?? "status";
+
+  if (sub === "enable") {
+    const r = await enableIdeAutoContinue();
+    console.log(`Enabled autoContinueAtUsageLimit`);
+    console.log(`Settings: ${r.path}`);
+    return 0;
+  }
+
+  if (sub === "disable") {
+    const r = await disableIdeAutoContinue();
+    console.log(`Disabled autoContinueAtUsageLimit`);
+    console.log(`Settings: ${r.path}`);
+    return 0;
+  }
+
+  if (sub === "install") {
+    const enabled = await enableIdeAutoContinue();
+    const cmdPath = await installUserSlashCommand();
+    console.log("Claude Auto IDE install complete.");
+    console.log("");
+    console.log(`✓ autoContinueAtUsageLimit = true`);
+    console.log(`  ${enabled.path}`);
+    console.log(`✓ slash command installed`);
+    console.log(`  ${cmdPath}`);
+    console.log(`✓ plugin files`);
+    console.log(`  ${getPluginRoot()}`);
+    console.log("");
+    console.log("Next:");
+    console.log("  1. Restart Claude Code / reload the window (VS Code or Cursor)");
+    console.log("  2. Type:  /claude-auto");
+    console.log("");
+    console.log("Optional plugin load for this session:");
+    console.log(`  claude --plugin-dir "${getPluginRoot()}"`);
+    return 0;
+  }
+
+  if (sub === "uninstall") {
+    await disableIdeAutoContinue();
+    const removed = await uninstallUserSlashCommand();
+    console.log(removed ? "Removed /claude-auto command." : "No user slash command found.");
+    console.log("Disabled autoContinueAtUsageLimit.");
+    return 0;
+  }
+
+  if (sub === "status" || sub === "help") {
+    if (sub === "help") {
+      console.log(`Usage: ${CLI_NAME} ide install|enable|disable|status|uninstall`);
+      return 0;
+    }
+    const s = await getIdeAutoContinueStatus();
+    const label =
+      s.enabled === true ? "ON" : s.enabled === false ? "OFF" : "unset (Claude default)";
+    console.log("Claude Auto — IDE status");
+    console.log("────────────────────────");
+    console.log(`autoContinueAtUsageLimit: ${label}`);
+    console.log(`settings: ${s.path}`);
+    console.log(`plugin:   ${getPluginRoot()}`);
+    return 0;
+  }
+
+  console.error(`Unknown ide subcommand: ${sub}`);
+  console.error(`Usage: ${CLI_NAME} ide install|enable|disable|status|uninstall`);
+  return 1;
 }
 
 function asString(value: unknown): string | undefined {
@@ -58,6 +143,10 @@ function parseNumber(name: string, value: string | undefined): number | undefine
 }
 
 async function main(argv: string[]): Promise<number> {
+  if (argv[0] === "ide") {
+    return runIdeCommand(argv.slice(1));
+  }
+
   let values: ReturnType<typeof parseArgs>["values"];
   let positionals: string[];
   let tokens: ReturnType<typeof parseArgs>["tokens"];
@@ -192,3 +281,4 @@ async function main(argv: string[]): Promise<number> {
 
 const code = await main(process.argv.slice(2));
 process.exitCode = code;
+
