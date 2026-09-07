@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CopyCommand } from "@/components/CopyCommand";
 import { FlowStrip } from "@/components/FlowStrip";
 import { LiveDemo } from "@/components/LiveDemo";
+import { Logo } from "@/components/Logo";
 
 export default function HomePage() {
   return (
@@ -9,8 +10,12 @@ export default function HomePage() {
       <div className="site-bg" aria-hidden />
       <div className="shell">
         <header className="flex items-center justify-between border-b border-[var(--line)] px-[clamp(1.25rem,4vw,3rem)] py-5">
-          <Link href="/" className="text-[1rem] font-bold tracking-[-0.02em]">
-            Claude Auto
+          <Link
+            href="/"
+            className="rounded-sm outline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--teal)]"
+            aria-label="Claude Auto home"
+          >
+            <Logo />
           </Link>
           <nav className="flex gap-5 text-[0.95rem] font-semibold text-[var(--ink-muted)]">
             <a className="hover:text-[var(--teal-deep)]" href="#use">
@@ -129,3 +134,4 @@ export default function HomePage() {
     </>
   );
 }
+
