@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Cross-platform wrapper around the Claude Code CLI that waits out usage/rate limits and resumes the same session.",
   "type": "module",
-  "main": "./dist/cli.js",
+  "main": "dist/cli.js",
   "bin": {
-    "claude-auto": "./dist/cli.js"
+    "claude-auto": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -61,3 +61,4 @@
     "vitest": "^3.2.4"
   }
 }
+
