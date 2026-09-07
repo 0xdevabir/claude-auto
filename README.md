@@ -371,6 +371,14 @@ Options:
 
 ---
 
+## Website
+
+Minimal marketing site (use case + install):
+
+```bash
+cd web && npm install && npm run dev
+```
+
 ## Contributing
 
 ```bash
