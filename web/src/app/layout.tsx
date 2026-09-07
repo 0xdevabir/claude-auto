@@ -14,7 +14,14 @@ const plex = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Claude Auto",
   description:
     "Wait out Claude Code usage limits and resume the same session — CLI and /claude-auto.",

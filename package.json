@@ -27,7 +27,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepack": "npm run build",
-    "doctor": "node dist/cli.js --doctor"
+    "doctor": "node dist/cli.js --doctor",
+    "web:dev": "npm run dev --prefix web",
+    "web:build": "npm run build --prefix web",
+    "web:start": "npm run start --prefix web"
   },
   "engines": {
     "node": ">=20"
@@ -62,3 +65,4 @@
     "vitest": "^3.2.4"
   }
 }
+

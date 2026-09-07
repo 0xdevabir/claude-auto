@@ -12,3 +12,6 @@ coverage/
 .claude-help-tmp.txt
 .claude-p-help-tmp.txt
 docs-research-*
+.vercel/
+web/.vercel/
+
