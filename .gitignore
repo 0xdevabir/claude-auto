@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+.env
+.env.*
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.swp
+.claude-help-tmp.txt
+.claude-p-help-tmp.txt
+docs-research-*

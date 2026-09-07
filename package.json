@@ -1,0 +1,63 @@
+{
+  "name": "claude-auto",
+  "version": "1.0.0",
+  "description": "Cross-platform wrapper around the Claude Code CLI that waits out usage/rate limits and resumes the same session.",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "bin": {
+    "claude-auto": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs/ARCHITECTURE.md",
+    "docs/TECHNICAL-DESIGN.md",
+    "docs/SECURITY.md",
+    "docs/TROUBLESHOOTING.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepack": "npm run build",
+    "doctor": "node dist/cli.js --doctor"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "wrapper",
+    "rate-limit",
+    "usage-limit",
+    "resume",
+    "automation"
+  ],
+  "author": "claude-auto contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/example/claude-auto.git"
+  },
+  "bugs": {
+    "url": "https://github.com/example/claude-auto/issues"
+  },
+  "homepage": "https://github.com/example/claude-auto#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^22.18.1",
+    "eslint": "^9.35.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.43.0",
+    "vitest": "^3.2.4"
+  }
+}

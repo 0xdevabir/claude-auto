@@ -1,0 +1,15 @@
+src/
+tests/
+*.ts
+!dist/**
+tsconfig*.json
+vitest.config.ts
+eslint.config.js
+.prettierrc.json
+.github/
+.git/
+*.tgz
+.env
+*.log
+coverage/
+node_modules/
