@@ -373,10 +373,12 @@ Options:
 
 ## Website
 
-Minimal marketing site (use case + install):
+Next.js landing site in `web/` (use case + install):
 
 ```bash
-cd web && npm install && npm run dev
+cd web
+npm install
+npm run dev
 ```
 
 ## Contributing

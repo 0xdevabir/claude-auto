@@ -1,103 +1,131 @@
-import Image from "next/image";
+import Link from "next/link";
+import { CopyCommand } from "@/components/CopyCommand";
+import { FlowStrip } from "@/components/FlowStrip";
+import { LiveDemo } from "@/components/LiveDemo";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <div className="site-bg" aria-hidden />
+      <div className="shell">
+        <header className="flex items-center justify-between border-b border-[var(--line)] px-[clamp(1.25rem,4vw,3rem)] py-5">
+          <Link href="/" className="text-[1rem] font-bold tracking-[-0.02em]">
+            Claude Auto
+          </Link>
+          <nav className="flex gap-5 text-[0.95rem] font-semibold text-[var(--ink-muted)]">
+            <a className="hover:text-[var(--teal-deep)]" href="#use">
+              Use
+            </a>
+            <a className="hover:text-[var(--teal-deep)]" href="#install">
+              Install
+            </a>
+            <a
+              className="hover:text-[var(--teal-deep)]"
+              href="https://www.npmjs.com/package/claude-auto"
+              target="_blank"
+              rel="noreferrer"
+            >
+              npm
+            </a>
+          </nav>
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <main>
+          <section className="grid items-end gap-10 border-b border-[var(--line)] px-[clamp(1.25rem,4vw,3rem)] pb-[clamp(2.5rem,7vh,4.5rem)] pt-[clamp(2.5rem,8vh,5.5rem)] lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
+            <div>
+              <p className="mono mb-3 text-[0.8rem] text-[var(--ink-muted)] animate-[fadeUp_650ms_var(--ease)_both]">
+                for Claude Code
+              </p>
+              <h1 className="m-0 text-[clamp(3.4rem,12vw,8.2rem)] font-extrabold leading-[0.9] tracking-[-0.055em]">
+                <span className="block animate-[fadeUp_700ms_var(--ease)_both]">
+                  Claude
+                </span>
+                <span
+                  className="block text-[var(--teal)] animate-[fadeUp_750ms_var(--ease)_both]"
+                  style={{ animationDelay: "80ms" }}
+                >
+                  Auto
+                </span>
+              </h1>
+              <p
+                className="mt-6 max-w-[22ch] text-[clamp(1.15rem,2.3vw,1.55rem)] font-semibold tracking-[-0.02em] text-[var(--ink-muted)] animate-[fadeUp_750ms_var(--ease)_both]"
+                style={{ animationDelay: "140ms" }}
+              >
+                Limit hits. Wait. Same session continues.
+              </p>
+              <div
+                className="mt-8 max-w-xl animate-[fadeUp_800ms_var(--ease)_both]"
+                style={{ animationDelay: "200ms" }}
+              >
+                <CopyCommand command="npm install -g claude-auto" />
+              </div>
+            </div>
+
+            <div
+              className="animate-[fadeUp_850ms_var(--ease)_both]"
+              style={{ animationDelay: "220ms" }}
+            >
+              <LiveDemo />
+            </div>
+          </section>
+
+          <section
+            id="use"
+            className="border-b border-[var(--line)] px-[clamp(1.25rem,4vw,3rem)] py-[clamp(2.5rem,7vh,4.5rem)]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <FlowStrip />
+          </section>
+
+          <section
+            id="install"
+            className="px-[clamp(1.25rem,4vw,3rem)] py-[clamp(2.5rem,7vh,4.5rem)]"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            <h2 className="m-0 mb-8 text-[clamp(2rem,6vw,3.4rem)] font-extrabold tracking-[-0.04em]">
+              Install
+            </h2>
+            <div className="grid gap-10 md:grid-cols-2 md:gap-14">
+              <div className="flex flex-col gap-3">
+                <h3 className="m-0 text-[1rem] font-bold tracking-[-0.02em]">CLI</h3>
+                <CopyCommand variant="ghost" command="npm install -g claude-auto" />
+                <CopyCommand
+                  variant="ghost"
+                  command='claude-auto --prompt "Build auth"'
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <h3 className="m-0 text-[1rem] font-bold tracking-[-0.02em]">
+                  Inside Claude Code
+                </h3>
+                <CopyCommand variant="ghost" command="claude-auto ide install" />
+                <CopyCommand variant="ghost" command="/claude-auto" />
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer className="mono flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] px-[clamp(1.25rem,4vw,3rem)] py-5 text-[0.72rem] text-[var(--ink-muted)]">
+          <p className="m-0">Independent community tool. Not affiliated with Anthropic.</p>
+          <p className="m-0">
+            <a
+              className="underline-offset-2 hover:underline"
+              href="https://www.devabir.me/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              devabir
+            </a>
+            {" · "}
+            <a
+              className="underline-offset-2 hover:underline"
+              href="https://www.webnest.app/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              webnest
+            </a>
+          </p>
+        </footer>
+      </div>
+    </>
   );
 }
