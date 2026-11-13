@@ -3,10 +3,12 @@ import { spawnSync } from "node:child_process";
 import { parseArgs } from "node:util";
 import { runApp } from "./app.js";
 import { DefaultClaudeAdapter } from "./claude/adapter.js";
+import { createProgram } from "./commander.js";
 import { loadConfig } from "./config/manager.js";
 import { ConfigurationError, formatErrorBanner } from "./errors/errors.js";
 import { runMockMode } from "./mock/runner.js";
 import { globalSignals } from "./process/signals.js";
+import { runInteractiveDashboard } from "./ui/dashboard.js";
 import { runDoctor } from "./ui/doctor.js";
 import { Logger } from "./ui/logger.js";
 import { CLI_NAME, PACKAGE_VERSION, PRODUCT_NAME } from "./version.js";
@@ -143,6 +145,30 @@ function parseNumber(name: string, value: string | undefined): number | undefine
 }
 
 async function main(argv: string[]): Promise<number> {
+  const COMMANDER_COMMANDS = new Set([
+    "plan",
+    "exec",
+    "review",
+    "debug",
+    "refactor",
+    "test",
+    "doc",
+    "explain",
+    "route",
+    "install",
+    "dashboard",
+  ]);
+
+  if (argv.length === 0 && process.stdin.isTTY) {
+    return runInteractiveDashboard();
+  }
+
+  if (argv.length > 0 && argv[0] !== undefined && COMMANDER_COMMANDS.has(argv[0])) {
+    const program = createProgram();
+    await program.parseAsync(argv, { from: "user" });
+    return 0;
+  }
+
   if (argv[0] === "ide") {
     return runIdeCommand(argv.slice(1));
   }
