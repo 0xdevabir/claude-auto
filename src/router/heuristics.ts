@@ -27,7 +27,9 @@ const CATEGORY_KEYWORDS: Record<TaskCategory, RegExp[]> = {
   refactoring: [/\b(refactor|clean\s*up|extract|modularize|reorganize|rename)\b/i],
   debugging: [/\b(debug|fix|bug|issue|error|stack\s*trace|crash|failing)\b/i],
   planning: [/\b(plan|architecture|roadmap|design|rfc|spec)\b/i],
+  architecture: [/\b(architecture|system\s*design|scaffold|microservice)\b/i],
   review: [/\b(review|audit|lint|security\s*check|pr\s*review|diff\s*check)\b/i],
+  security_audit: [/\b(cve|vulnerability|exploit|penetration|xss|csrf|sanitize|secret\s*leak)\b/i],
   execution: [/\b(build|create|implement|add|generate|scaffold)\b/i],
 };
 

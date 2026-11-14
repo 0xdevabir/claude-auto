@@ -178,6 +178,32 @@ export class ModelRouterEngine {
         }
         break;
 
+      case "architecture":
+        if (profile === "economy") {
+          execModel = "sonnet";
+          execEffort = "medium";
+        } else if (profile === "quality") {
+          execModel = "opus";
+          execEffort = "high";
+        } else {
+          execModel = "opusplan";
+          execEffort = "high";
+        }
+        break;
+
+      case "security_audit":
+        if (profile === "economy") {
+          execModel = "sonnet";
+          execEffort = "low";
+        } else if (profile === "quality") {
+          execModel = "opus";
+          execEffort = "high";
+        } else {
+          execModel = "sonnet";
+          execEffort = "high";
+        }
+        break;
+
       case "review":
         if (profile === "economy") {
           execModel = "haiku";

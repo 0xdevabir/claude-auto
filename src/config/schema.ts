@@ -1,4 +1,6 @@
 import { ConfigurationError } from "../errors/errors.js";
+import { ModelIdSchema } from "../registry/models.js";
+import { OptimizationProfileSchema } from "../registry/profiles.js";
 import type { ClaudeAutoConfig } from "./defaults.js";
 
 function expectNumber(name: string, value: unknown, min = 0): number {
@@ -32,6 +34,57 @@ export function validateConfig(
 ): ClaudeAutoConfig {
   const merged: ClaudeAutoConfig = { ...base, ...partial };
 
+  // Orchestration validations
+  if (partial.optimizationStrategy !== undefined) {
+    const parse = OptimizationProfileSchema.safeParse(merged.optimizationStrategy);
+    if (!parse.success) {
+      throw new ConfigurationError(`Invalid optimizationStrategy: "${merged.optimizationStrategy}". Expected economy, balanced, or quality.`);
+    }
+  }
+
+  if (partial.defaultPlanningModel !== undefined) {
+    const parse = ModelIdSchema.safeParse(merged.defaultPlanningModel);
+    if (!parse.success) {
+      throw new ConfigurationError(`Invalid defaultPlanningModel: "${merged.defaultPlanningModel}".`);
+    }
+  }
+
+  if (partial.defaultExecutionModel !== undefined) {
+    const parse = ModelIdSchema.safeParse(merged.defaultExecutionModel);
+    if (!parse.success) {
+      throw new ConfigurationError(`Invalid defaultExecutionModel: "${merged.defaultExecutionModel}".`);
+    }
+  }
+
+  if (partial.defaultVerificationModel !== undefined) {
+    const parse = ModelIdSchema.safeParse(merged.defaultVerificationModel);
+    if (!parse.success) {
+      throw new ConfigurationError(`Invalid defaultVerificationModel: "${merged.defaultVerificationModel}".`);
+    }
+  }
+
+  merged.maxParallelTasks = expectNumber("maxParallelTasks", merged.maxParallelTasks, 1);
+  merged.approvalRequired = expectBoolean("approvalRequired", merged.approvalRequired);
+
+  if (merged.budgetLimits) {
+    merged.budgetLimits.maxCostPerWorkflowUsd = expectNumber(
+      "budgetLimits.maxCostPerWorkflowUsd",
+      merged.budgetLimits.maxCostPerWorkflowUsd,
+      0,
+    );
+    merged.budgetLimits.monthlyLimitUsd = expectNumber(
+      "budgetLimits.monthlyLimitUsd",
+      merged.budgetLimits.monthlyLimitUsd,
+      0,
+    );
+    merged.budgetLimits.warnThresholdPercent = expectNumber(
+      "budgetLimits.warnThresholdPercent",
+      merged.budgetLimits.warnThresholdPercent,
+      1,
+    );
+  }
+
+  // Legacy validations
   merged.fallbackResetSeconds = expectNumber(
     "fallbackResetSeconds",
     merged.fallbackResetSeconds,
@@ -93,6 +146,7 @@ export function parseConfigFile(raw: unknown): Partial<ClaudeAutoConfig> {
     "mockLimitAfterMs",
     "mockResetAfterMs",
     "mockCompleteAfterMs",
+    "maxParallelTasks",
   ] as const;
   for (const key of numberKeys) {
     if (key in obj) {
@@ -104,7 +158,7 @@ export function parseConfigFile(raw: unknown): Partial<ClaudeAutoConfig> {
     }
   }
 
-  const boolKeys = ["countdown", "verbose", "autoResume"] as const;
+  const boolKeys = ["countdown", "verbose", "autoResume", "approvalRequired"] as const;
   for (const key of boolKeys) {
     if (key in obj) {
       const v = obj[key];
@@ -115,12 +169,33 @@ export function parseConfigFile(raw: unknown): Partial<ClaudeAutoConfig> {
     }
   }
 
-  if ("continuationPrompt" in obj) {
-    const v = obj.continuationPrompt;
-    if (typeof v !== "string") {
-      throw new ConfigurationError('Config "continuationPrompt" must be a string.');
+  const stringKeys = [
+    "continuationPrompt",
+    "optimizationStrategy",
+    "defaultPlanningModel",
+    "defaultExecutionModel",
+    "defaultVerificationModel",
+  ] as const;
+  for (const key of stringKeys) {
+    if (key in obj) {
+      const v = obj[key];
+      if (typeof v !== "string") {
+        throw new ConfigurationError(`Config "${key}" must be a string.`);
+      }
+      (out as Record<string, unknown>)[key] = v;
     }
-    out.continuationPrompt = v;
+  }
+
+  if ("budgetLimits" in obj && typeof obj.budgetLimits === "object" && obj.budgetLimits !== null) {
+    out.budgetLimits = obj.budgetLimits as ClaudeAutoConfig["budgetLimits"];
+  }
+
+  if ("customModelPricing" in obj && typeof obj.customModelPricing === "object" && obj.customModelPricing !== null) {
+    out.customModelPricing = obj.customModelPricing as ClaudeAutoConfig["customModelPricing"];
+  }
+
+  if ("workflowPresets" in obj && typeof obj.workflowPresets === "object" && obj.workflowPresets !== null) {
+    out.workflowPresets = obj.workflowPresets as ClaudeAutoConfig["workflowPresets"];
   }
 
   return out;

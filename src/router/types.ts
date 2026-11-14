@@ -9,8 +9,10 @@ export const TaskCategorySchema = z.enum([
   "refactoring",
   "debugging",
   "planning",
+  "architecture",
   "review",
   "execution",
+  "security_audit",
 ]);
 export type TaskCategory = z.infer<typeof TaskCategorySchema>;
 
@@ -32,9 +34,9 @@ export interface RoutingDecision {
   confidence: number;
   profile: OptimizationProfile;
   phases: {
-    plan?: PhaseAllocation;
+    plan?: PhaseAllocation | undefined;
     execution: PhaseAllocation;
-    verification?: PhaseAllocation;
+    verification?: PhaseAllocation | undefined;
   };
   explanation: string;
   estimatedTokens: {

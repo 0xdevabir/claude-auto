@@ -155,6 +155,10 @@ async function main(argv: string[]): Promise<number> {
     "doc",
     "explain",
     "route",
+    "distribute",
+    "parallel",
+    "verify",
+    "stats",
     "install",
     "dashboard",
   ]);

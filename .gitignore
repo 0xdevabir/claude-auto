@@ -12,6 +12,7 @@ coverage/
 .claude-help-tmp.txt
 .claude-p-help-tmp.txt
 docs-research-*
+graft/
 .claude/
 .claude-auto/
 .vercel/

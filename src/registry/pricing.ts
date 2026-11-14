@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { getModelCapability, ModelId } from "./models.js";
+import { getModelCapability, ModelCapability, ModelId } from "./models.js";
 
 export interface TokenUsageEstimate {
   estimatedInputTokens: number;
@@ -14,17 +13,28 @@ export interface CostEstimateResult {
   cacheCostUsd: number;
   totalCostUsd: number;
   tokens: TokenUsageEstimate;
+  isCustomPriced?: boolean;
 }
 
 export function calculateCostEstimate(
   modelId: ModelId,
   tokens: TokenUsageEstimate,
+  pricingOverrides?: Partial<Record<ModelId, {
+    costPerMillionInputTokensUsd: number;
+    costPerMillionOutputTokensUsd: number;
+    costPerMillionCacheReadTokensUsd: number;
+  }>>,
 ): CostEstimateResult {
   const cap = getModelCapability(modelId);
-  const inputCost = (tokens.estimatedInputTokens / 1_000_000) * cap.costPerMillionInputTokensUsd;
-  const outputCost = (tokens.estimatedOutputTokens / 1_000_000) * cap.costPerMillionOutputTokensUsd;
-  const cacheCost =
-    ((tokens.estimatedCacheReadTokens ?? 0) / 1_000_000) * cap.costPerMillionCacheReadTokensUsd;
+  const override = pricingOverrides?.[modelId];
+
+  const inputRate = override?.costPerMillionInputTokensUsd ?? cap.costPerMillionInputTokensUsd;
+  const outputRate = override?.costPerMillionOutputTokensUsd ?? cap.costPerMillionOutputTokensUsd;
+  const cacheRate = override?.costPerMillionCacheReadTokensUsd ?? cap.costPerMillionCacheReadTokensUsd;
+
+  const inputCost = (tokens.estimatedInputTokens / 1_000_000) * inputRate;
+  const outputCost = (tokens.estimatedOutputTokens / 1_000_000) * outputRate;
+  const cacheCost = ((tokens.estimatedCacheReadTokens ?? 0) / 1_000_000) * cacheRate;
   const total = Number((inputCost + outputCost + cacheCost).toFixed(6));
 
   return {
@@ -34,5 +44,6 @@ export function calculateCostEstimate(
     cacheCostUsd: Number(cacheCost.toFixed(6)),
     totalCostUsd: total,
     tokens,
+    isCustomPriced: override !== undefined,
   };
 }

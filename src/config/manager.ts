@@ -71,3 +71,14 @@ export async function loadConfig(
   const config = validateConfig({ ...filePartial, ...fromCli }, DEFAULT_CONFIG);
   return { config, configPath: usedPath };
 }
+
+export async function saveConfig(
+  config: ClaudeAutoConfig,
+  customPath?: string,
+): Promise<string> {
+  const targetPath = customPath ?? path.join(getConfigDir(), "config.json");
+  await fs.mkdir(path.dirname(targetPath), { recursive: true });
+  const validated = validateConfig(config, DEFAULT_CONFIG);
+  await fs.writeFile(targetPath, JSON.stringify(validated, null, 2) + "\n", "utf8");
+  return targetPath;
+}
